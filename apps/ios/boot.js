@@ -275,7 +275,7 @@ E.on('notify',msg=>{
     }, require("Storage").readJSON("mylocation.json", true) || {});    
     //remove notification from phone
     NRF.ancsAction(msg.uid, false);
-    if(Math.abs(myLocationJson.lat - locationJson.lat) < 0.0001	 && Math.abs(myLocationJson.lon -locationJson.lon) < 0.0001){
+    if(Math.abs(myLocationJson.lat - locationJson.lat) < 0.0001     && Math.abs(myLocationJson.lon -locationJson.lon) < 0.0001){
       //same location, do not write
       return;
     }
@@ -394,16 +394,19 @@ E.emit("ANCS", {
 
 {
   function tryCTSGetTime(attempts, onFinish, onError){
-    try{
-      NRF.ctsGetTime();
-      onFinish();
-    } catch (error) {
-	  attempts -= 1;
+    function retry(){
+      attempts -= 1;
       if(attempts>0){
         setTimeout(tryCTSGetTime, 300, attempts, onFinish, onError);
       } else{
         onError();
       }
+    }
+    
+    try {
+      NRF.ctsGetTime().then(e=>{onFinish(e);}, retry);
+    } catch (error) {
+      retry();
     }
   }
 
